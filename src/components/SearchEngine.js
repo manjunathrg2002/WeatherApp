@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 
-function SearchEngine({ query, setQuery, search, recentSearches }) {
+function SearchEngine({ query, setQuery, search, addFavoriteCity, recentSearches }) {
   const [showRecent, setShowRecent] = useState(false);
 
   const handleKeyPress = (e) => {
@@ -25,14 +25,28 @@ function SearchEngine({ query, setQuery, search, recentSearches }) {
         value={query}
         onChange={handleChange}
         onKeyPress={handleKeyPress}
+        onFocus={() => setShowRecent(true)}
+        onBlur={() => setTimeout(() => setShowRecent(false), 200)} // Delay to allow click on dropdown
       />
-      <button onClick={search}>
+      <button onClick={(e) => search(e)}>
         <i className="fas fa-search" style={{ fontSize: "18px" }}></i>
+      </button>
+      <button onClick={addFavoriteCity}>
+        <i className="fa-solid fa-plus" style={{ fontSize: "10px" }}> Add to Favorite</i>
       </button>
 
       {/* Dropdown for recent searches */}
       {showRecent && query && recentSearches.length > 0 && (
-        <div className="recent-search-dropdown">
+        <div className="recent-search-dropdown" style={{
+          position: "absolute",
+          top: "100%",
+          left: 0,
+          right: 0,
+          backgroundColor: "#fff",
+          border: "1px solid #ccc",
+          boxShadow: "0 4px 8px rgba(0,0,0,0.2)",
+          zIndex: 1,
+        }}>
           <ul style={{ listStyleType: "none", padding: 0, margin: 0 }}>
             {recentSearches
               .filter((city) => city.toLowerCase().includes(query.toLowerCase())) // Filter based on query
@@ -41,7 +55,7 @@ function SearchEngine({ query, setQuery, search, recentSearches }) {
                   key={index}
                   onClick={() => {
                     setQuery(city);
-                    search({ type: "click" });
+                    search(null, city); // Pass the city to fetch its data
                     setShowRecent(false); // Hide dropdown after selecting a city
                   }}
                   style={{

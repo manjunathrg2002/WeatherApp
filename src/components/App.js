@@ -20,20 +20,21 @@ function App() {
   );
 
   // Search function
-  const search = async (event) => {
+  const search = async (event, city) => {
     if (event) event.preventDefault();
 
+    const searchCity = city || query; // Use provided city or the current query
     setWeather({ ...weather, loading: true });
     const apiKey = "b03a640e5ef6980o4da35b006t5f2942";
-    const url = `https://api.shecodes.io/weather/v1/current?query=${query}&key=${apiKey}`;
+    const url = `https://api.shecodes.io/weather/v1/current?query=${searchCity}&key=${apiKey}`;
 
     try {
       const res = await axios.get(url);
       setWeather({ data: res.data, loading: false, error: false });
 
       // Update recent searches
-      if (!recentSearches.includes(query)) {
-        const updatedRecentSearches = [query, ...recentSearches].slice(0, 5); // Keep only the last 5 searches
+      if (!recentSearches.includes(searchCity)) {
+        const updatedRecentSearches = [searchCity, ...recentSearches].slice(0, 5); // Keep only the last 5 searches
         setRecentSearches(updatedRecentSearches);
         localStorage.setItem("recentSearches", JSON.stringify(updatedRecentSearches));
       }
@@ -47,6 +48,22 @@ function App() {
   useEffect(() => {
     search();
   }, []);
+
+  const addFavoriteCity = () => {
+    if (query && !favoriteCities.includes(query)) {
+      const updatedFavorites = [...favoriteCities, query];
+      setFavoriteCities(updatedFavorites);
+      localStorage.setItem("favoriteCities", JSON.stringify(updatedFavorites));
+    }
+  };
+
+  const removeFavoriteCity = (city) => {
+    const updatedFavorites = favoriteCities.filter(
+      (favCity) => favCity !== city
+    );
+    setFavoriteCities(updatedFavorites);
+    localStorage.setItem("favoriteCities", JSON.stringify(updatedFavorites));
+  };
 
   return (
     <div className="App">
@@ -66,7 +83,7 @@ function App() {
               <span
                 onClick={() => {
                   setQuery(city);
-                  search();
+                  search(null, city); // Pass the city to fetch its data
                 }}
                 style={{ cursor: "pointer" }}
               >
@@ -85,6 +102,7 @@ function App() {
         query={query}
         setQuery={setQuery}
         search={search}
+        addFavoriteCity={addFavoriteCity}
         recentSearches={recentSearches}
       />
 
@@ -101,7 +119,7 @@ function App() {
           <br />
           <span className="error-message">
             <span style={{ fontFamily: "font" }}>
-              Sorry city not found, please try again.
+              Sorry, city not found. Please try again.
             </span>
           </span>
         </>

@@ -397,9 +397,9 @@ body {
 
 .recent-search-dropdown {
   position: absolute;
-  width: 74%;
-  top: 42px; /* Adjust based on input field height */
-  left: 25px;
+  width: 74.5%;
+  top: 40px; /* Adjust based on input field height */
+  left: 3px;
   right: 0;
   background-color: white;
   border: 1px solid #ccc;
