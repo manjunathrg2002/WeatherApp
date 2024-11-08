@@ -24,7 +24,8 @@ This is a web app developed as a assignment project using React.js. It allows us
 To use this app, you can follow these steps:
 
 - Clone the repository or download the source code.
-- Open the project in your preferred code editor.
+- Open the project in your preferred code editor.![Untitled Project](https://github.com/user-attachments/assets/6a6f4393-ef91-4841-8b0a-e554cf0e04bd)
+
 - Run  `npm install` to install the necessary dependencies.
 - Run `npm start` to start the development server.
 - Open your browser and navigate to `http://localhost:3000` to use the app.
