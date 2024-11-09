@@ -6,24 +6,34 @@ import "../styles.css";
 import "@fortawesome/fontawesome-free/css/all.min.css";
 
 function App() {
-  const [query, setQuery] = useState("Bangalore"); // Set default city as Bangalore
+  const [query, setQuery] = useState("Bangalore");
   const [weather, setWeather] = useState({
     loading: true,
     data: {},
     error: false,
   });
-  const [favoriteCities, setFavoriteCities] = useState(
-    JSON.parse(localStorage.getItem("favoriteCities")) || []
-  );
+  const [favoriteCities, setFavoriteCities] = useState([]);
   const [recentSearches, setRecentSearches] = useState(
     JSON.parse(localStorage.getItem("recentSearches")) || []
   );
 
+  // Initialize favorite cities from JSON server
+  useEffect(() => {
+    const fetchFavoriteCities = async () => {
+      try {
+        const res = await axios.get("http://localhost:3001/favoriteCities");
+        setFavoriteCities(res.data);
+      } catch (error) {
+        console.error("Error fetching favorite cities:", error);
+      }
+    };
+    fetchFavoriteCities();
+  }, []);
+
   // Search function
   const search = async (event, city) => {
     if (event) event.preventDefault();
-
-    const searchCity = city || query; // Use provided city or the current query
+    const searchCity = city || query;
     setWeather({ ...weather, loading: true });
     const apiKey = "b03a640e5ef6980o4da35b006t5f2942";
     const url = `https://api.shecodes.io/weather/v1/current?query=${searchCity}&key=${apiKey}`;
@@ -34,7 +44,7 @@ function App() {
 
       // Update recent searches
       if (!recentSearches.includes(searchCity)) {
-        const updatedRecentSearches = [searchCity, ...recentSearches].slice(0, 5); // Keep only the last 5 searches
+        const updatedRecentSearches = [searchCity, ...recentSearches].slice(0, 5);
         setRecentSearches(updatedRecentSearches);
         localStorage.setItem("recentSearches", JSON.stringify(updatedRecentSearches));
       }
@@ -44,25 +54,32 @@ function App() {
     }
   };
 
-  // Trigger an initial search for the default city (Bangalore)
+  // Trigger an initial search for the default city
   useEffect(() => {
     search();
   }, []);
 
-  const addFavoriteCity = () => {
-    if (query && !favoriteCities.includes(query)) {
-      const updatedFavorites = [...favoriteCities, query];
-      setFavoriteCities(updatedFavorites);
-      localStorage.setItem("favoriteCities", JSON.stringify(updatedFavorites));
+  const addFavoriteCity = async () => {
+    if (query && !favoriteCities.some(city => city.name === query)) {
+      try {
+        const res = await axios.post("http://localhost:3001/favoriteCities", { name: query });
+        setFavoriteCities([...favoriteCities, res.data]);
+      } catch (error) {
+        console.error("Error adding favorite city:", error);
+      }
     }
   };
 
-  const removeFavoriteCity = (city) => {
-    const updatedFavorites = favoriteCities.filter(
-      (favCity) => favCity !== city
-    );
-    setFavoriteCities(updatedFavorites);
-    localStorage.setItem("favoriteCities", JSON.stringify(updatedFavorites));
+  const removeFavoriteCity = async (city) => {
+    const cityToDelete = favoriteCities.find(favCity => favCity.name === city);
+    if (cityToDelete) {
+      try {
+        await axios.delete(`http://localhost:3001/favoriteCities/${cityToDelete.id}`);
+        setFavoriteCities(favoriteCities.filter(favCity => favCity.name !== city));
+      } catch (error) {
+        console.error("Error removing favorite city:", error);
+      }
+    }
   };
 
   return (
@@ -70,9 +87,9 @@ function App() {
       <div className="favorites">
         <h3>Favorite Cities:</h3>
         <ul style={{ listStyleType: "none", padding: 0 }}>
-          {favoriteCities.map((city, index) => (
+          {favoriteCities.map((city) => (
             <li
-              key={index}
+              key={city.id}
               style={{
                 display: "flex",
                 justifyContent: "space-between",
@@ -82,14 +99,14 @@ function App() {
             >
               <span
                 onClick={() => {
-                  setQuery(city);
-                  search(null, city); // Pass the city to fetch its data
+                  setQuery(city.name);
+                  search(null, city.name);
                 }}
                 style={{ cursor: "pointer" }}
               >
-                {city}
+                {city.name}
               </span>
-              <button onClick={() => removeFavoriteCity(city)}>
+              <button onClick={() => removeFavoriteCity(city.name)}>
                 <i className="fa-solid fa-trash" style={{ fontSize: "18px" }}></i>
               </button>
             </li>
@@ -97,7 +114,6 @@ function App() {
         </ul>
       </div>
 
-      {/* Pass recent searches to SearchEngine */}
       <SearchEngine
         query={query}
         setQuery={setQuery}
